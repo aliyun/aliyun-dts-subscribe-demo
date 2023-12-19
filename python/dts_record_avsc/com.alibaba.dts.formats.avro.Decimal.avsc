@@ -1,0 +1,19 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "Decimal",
+    "fields": [
+        {
+            "name": "value",
+            "type": "string"
+        },
+        {
+            "name": "precision",
+            "type": "int"
+        },
+        {
+            "name": "scale",
+            "type": "int"
+        }
+    ]
+}

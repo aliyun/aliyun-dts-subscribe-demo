@@ -1,0 +1,15 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "Character",
+    "fields": [
+        {
+            "name": "charset",
+            "type": "string"
+        },
+        {
+            "name": "value",
+            "type": "bytes"
+        }
+    ]
+}

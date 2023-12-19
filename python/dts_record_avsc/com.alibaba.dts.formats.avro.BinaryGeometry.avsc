@@ -1,0 +1,15 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "BinaryGeometry",
+    "fields": [
+        {
+            "name": "type",
+            "type": "string"
+        },
+        {
+            "name": "value",
+            "type": "bytes"
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "name": "Field",
+    "type": "record",
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "dataTypeNumber",
+            "type": "int"
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "enum",
+    "name": "EmptyObject",
+    "symbols": [
+        "NULL",
+        "NONE"
+    ]
+}
