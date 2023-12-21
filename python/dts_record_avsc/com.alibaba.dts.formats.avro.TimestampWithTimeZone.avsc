@@ -1,0 +1,15 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "TimestampWithTimeZone",
+    "fields": [
+        {
+            "name": "value",
+            "type": "DateTime"
+        },
+        {
+            "name": "timezone",
+            "type": "string"
+        }
+    ]
+}

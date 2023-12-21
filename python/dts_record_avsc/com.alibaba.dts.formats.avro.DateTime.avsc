@@ -1,0 +1,63 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "DateTime",
+    "fields": [
+        {
+            "name": "year",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        },
+        {
+            "name": "month",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        },
+        {
+            "name": "day",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        },
+        {
+            "name": "hour",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        },
+        {
+            "name": "minute",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        },
+        {
+            "name": "second",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        },
+        {
+            "name": "millis",
+            "default": null,
+            "type": [
+                "null",
+                "int"
+            ]
+        }
+    ]
+}

@@ -1,1 +1,1 @@
-python demo for apiyun dts subscribe
+python demo for aliyun dts subscribe

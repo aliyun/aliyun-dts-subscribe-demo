@@ -1,0 +1,15 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "Timestamp",
+    "fields": [
+        {
+            "name": "timestamp",
+            "type": "long"
+        },
+        {
+            "name": "millis",
+            "type": "int"
+        }
+    ]
+}

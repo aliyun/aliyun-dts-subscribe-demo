@@ -1,0 +1,19 @@
+{
+    "namespace": "com.alibaba.dts.formats.avro",
+    "type": "record",
+    "name": "Float",
+    "fields": [
+        {
+            "name": "value",
+            "type": "double"
+        },
+        {
+            "name": "precision",
+            "type": "int"
+        },
+        {
+            "name": "scale",
+            "type": "int"
+        }
+    ]
+}
