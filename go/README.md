@@ -1,1 +1,1 @@
-go demo for apiyun dts subscribe
+go demo for aliyun dts subscribe
