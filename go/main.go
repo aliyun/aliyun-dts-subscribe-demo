@@ -46,6 +46,11 @@ func main() {
 	config.Net.SASL.Password = "password"
 	config.Version = sarama.V0_11_0_0
 
+	// 如果User不含有group，则更新User为User-group
+	if !strings.Contains(config.Net.SASL.User, group) {
+		config.Net.SASL.User = config.Net.SASL.User + "-" + group
+	}
+	
 	switch assignor {
 	case "sticky":
 		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategySticky()}
