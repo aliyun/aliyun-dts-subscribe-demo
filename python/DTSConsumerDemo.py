@@ -17,23 +17,23 @@ def decode(msg_value):
 
 if __name__ == "__main__":
     try:
-        # Kafka Consumer configuration parameters
-        topic_name = "cn_hangzhou_vpc_rm_xxxxxxxx_dts_upgrade_from_old_version2"
+        # Kafka Consumer 配置参数
+        topic_name = "cn_hangzhou_vpc_rm_bp1907x8zbo20z60u_dts_upgrade_from_old_version2"
         auto_commit = False
-        # Consumer group ID
-        group_id = "dtsexxxxxxxx"
+        # 消费组 ID
+        group_id = "dtse9gh4883283o991"
         sasl_mechanism = "PLAIN"
         security_protocol = "SASL_PLAINTEXT"
-        username = "username"
-        password = "password"
-        bootstrap_servers = ["dts-{region}.aliyuncs.com:18001"]
+        username = "xiaqiutest"
+        password = "DTStest1234"
+        bootstrap_servers = ["dts-cn-hangzhou.aliyuncs.com:18001"]
 
-        # If the username does not contain the group_id, update the username to username-group_id
+        # 如果username不含有group_id，则更新username为username-group_id
         if group_id not in username:
             username = username + "-" + group_id
 
-        # Create a KafkaConsumer instance
-        consumer = KafkaConsumer(
+        # 创建 KafkaConsumer 实例
+        consumerGroupHandler = KafkaConsumer(
             topic_name,
             enable_auto_commit=auto_commit,
             group_id=group_id,
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         )
 
         print("start")
-        for msg in consumer:
+        for msg in consumerGroupHandler:
             record = decode(msg.value)
             # import datetime
 
