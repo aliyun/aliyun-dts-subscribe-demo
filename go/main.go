@@ -20,29 +20,29 @@ import (
 
 // Sarama configuration options
 var (
-	r        io.Reader
-	brokers  = "dts-xxxxx.aliyuncs.com:18001"
-	group    = "dtsxxxxxx"
-	topics   = "cn_hangzhou_xxxxxxx_version2"
+	r       io.Reader
+	brokers = "ip:port"
+	group    = "dtsgroup"
+	topics   = "dtstopic"
 	assignor = "range"
 	oldest   = true
 	verbose  = false
-	config   = sarama.NewConfig()
 )
 
 func main() {
 	keepRunning := true
-	log.Println("Starting a new Sarama consumerGroupHandler")
+	log.Println("Starting a new Sarama consumer")
 
 	if verbose {
 		sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
 	}
 
+	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 	config.Net.MaxOpenRequests = 100
 	config.Consumer.Offsets.CommitInterval = 1 * time.Second
 	config.Net.SASL.Enable = true
-	config.Net.SASL.User = "User"
+	config.Net.SASL.User = "user"
 	config.Net.SASL.Password = "password"
 	config.Version = sarama.V0_11_0_0
 
@@ -50,7 +50,7 @@ func main() {
 	if !strings.Contains(config.Net.SASL.User, group) {
 		config.Net.SASL.User = config.Net.SASL.User + "-" + group
 	}
-
+	
 	switch assignor {
 	case "sticky":
 		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategySticky()}
@@ -59,7 +59,7 @@ func main() {
 	case "range":
 		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategyRange()}
 	default:
-		log.Panicf("Unrecognized consumerGroupHandler group partition assignor: %s", assignor)
+		log.Panicf("Unrecognized consumer group partition assignor: %s", assignor)
 	}
 
 	if oldest {
@@ -69,58 +69,37 @@ func main() {
 	}
 
 	/**
-	 * Set up a new Sarama consumerGroupHandler group
+	 * Setup a new Sarama consumer group
 	 */
-	consumerGroupHandler := ConsumerGroupHandler{
+	consumer := Consumer{
 		ready: make(chan bool),
 	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 
-	client, err := sarama.NewClient(strings.Split(brokers, ","), config)
+	client, err := sarama.NewConsumerGroup(strings.Split(brokers, ","), group, config)
 	if err != nil {
-		log.Panicf("Error creating client: %v", err)
+		log.Panicf("Error creating consumer group client: %v", err)
 	}
-
-	consumer, err := sarama.NewConsumerFromClient(client)
-	if err != nil {
-		log.Panicf("Error creating consumer: %v", err)
-	}
-	var partitionArea int32 = 0
-	var offset int64 = sarama.OffsetNewest
-	partition, err := consumer.ConsumePartition(topics, partitionArea, offset)
-	if err != nil {
-		log.Panicf("Error creating partition %v according to offset %v: %v", partition, offset, err)
-	}
-	go func() {
-		for msg := range partition.Messages() {
-			log.Printf("Message on topic:%s partition:%d offset:%d\n", msg.Topic, msg.Partition, msg.Offset)
-		}
-	}()
 
 	consumptionIsPaused := false
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
-	consumerGroup, err := sarama.NewConsumerGroupFromClient(group, client)
-	if err != nil {
-		return
-	}
 	go func() {
+		defer wg.Done()
 		for {
-			err := consumerGroup.Consume(ctx, strings.Split(topics, ","), &consumerGroupHandler)
-			if err != nil {
-				log.Panicf("Error from consumerGroupHandler: %v", err)
+			if err := client.Consume(ctx, strings.Split(topics, ","), &consumer); err != nil {
+				log.Panicf("Error from consumer: %v", err)
 			}
 			if ctx.Err() != nil {
 				return
 			}
-			consumerGroupHandler.ready = make(chan bool)
+			consumer.ready = make(chan bool)
 		}
 	}()
 
-	<-consumerGroupHandler.ready // Await till the consumerGroupHandler has been set up
-	log.Println("Sarama consumerGroupHandler up and running!...")
+	<-consumer.ready // Await till the consumer has been set up
+	log.Println("Sarama consumer up and running!...")
 
 	sigusr1 := make(chan os.Signal, 1)
 	signal.Notify(sigusr1, syscall.SIGUSR1)
@@ -137,7 +116,7 @@ func main() {
 			log.Println("terminating: via signal")
 			keepRunning = false
 		case <-sigusr1:
-			toggleConsumptionFlow(consumerGroup, &consumptionIsPaused)
+			toggleConsumptionFlow(client, &consumptionIsPaused)
 		}
 	}
 	cancel()
@@ -159,21 +138,21 @@ func toggleConsumptionFlow(client sarama.ConsumerGroup, isPaused *bool) {
 	*isPaused = !*isPaused
 }
 
-type ConsumerGroupHandler struct {
+type Consumer struct {
 	ready chan bool
 }
 
-func (consumer *ConsumerGroupHandler) Setup(sarama.ConsumerGroupSession) error {
+func (consumer *Consumer) Setup(sarama.ConsumerGroupSession) error {
 	// Mark the consumer as ready
 	close(consumer.ready)
 	return nil
 }
 
-func (consumer *ConsumerGroupHandler) Cleanup(sarama.ConsumerGroupSession) error {
+func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (consumer *ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for {
 		select {
 		case message := <-claim.Messages():
@@ -198,11 +177,11 @@ func (consumer *ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupS
 				log.Fatal(err)
 			}
 
-			nativeMap := native.(map[string]interface{})
-			if nativeMap["operation"].(string) != "HEARTBEAT" && nativeMap["operation"].(string) != "BEGIN" && nativeMap["operation"].(string) != "COMMIT" {
-				log.Println("native:", native, "operation:", nativeMap["operation"])
-				log.Println("texual:", string(textual))
-			}
+			//nativeMap := native.(map[string]interface{})
+			//if nativeMap["operation"].(string) != "HEARTBEAT" {
+			//log.Println("native:", native, "operation:", nativeMap["operation"])
+			log.Println("texual:", string(textual))
+			//}
 
 			session.MarkMessage(message, "")
 
