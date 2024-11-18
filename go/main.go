@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
-	"github.com/linkedin/goavro/v2"
 )
 
 // Sarama configuration options
@@ -177,32 +176,19 @@ func (consumer *ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupS
 	for {
 		select {
 		case message := <-claim.Messages():
-			r = bytes.NewReader(message.Value)
-			_, err := avro.DeserializeRecord(r)
-			if err != nil {
-				log.Fatal(err)
-			}
 			t := avro.NewRecord()
-			codec, err := goavro.NewCodec(t.Schema())
+			t, err := avro.DeserializeRecordFromSchema(bytes.NewReader(message.Value), t.Schema())
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			native, _, err := codec.NativeFromBinary(message.Value)
-			if err != nil {
-				log.Fatal(err)
+			// log.Println("Operation:", t.Operation)
+			if t.Operation.String() != "INSERT" && t.Operation.String() != "UPDATE" && t.Operation.String() != "DELETE" {
+				continue
 			}
 
-			textual, err := codec.TextualFromNative(nil, native)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			nativeMap := native.(map[string]interface{})
-			if nativeMap["operation"].(string) != "HEARTBEAT" && nativeMap["operation"].(string) != "BEGIN" && nativeMap["operation"].(string) != "COMMIT" {
-				log.Println("native:", native, "operation:", nativeMap["operation"])
-				log.Println("texual:", string(textual))
-			}
+			log.Printf("Message on topic:%s partition:%d offset:%d\n", message.Topic, message.Partition, message.Offset)
+			_j, _ := t.MarshalJSON()
+			log.Printf("message: %s", string(_j))
 
 			session.MarkMessage(message, "")
 
