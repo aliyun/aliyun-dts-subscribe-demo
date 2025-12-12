@@ -20,14 +20,15 @@ import (
 
 // Sarama configuration options
 var (
-	r        io.Reader
-	brokers  = "dts-xxxxx.aliyuncs.com:18001"
-	group    = "dtsxxxxxx"
-	topics   = "cn_hangzhou_xxxxxxx_version2"
-	assignor = "range"
-	oldest   = true
-	verbose  = false
-	config   = sarama.NewConfig()
+	r                 io.Reader
+	brokers           = "dts-xxxxx.aliyuncs.com:18001"
+	group             = "dtsxxxxxx"
+	topics            = "cn_hangzhou_xxxxxxx_version2"
+	assignor          = "range"
+	oldest            = true
+	verbose           = false
+	config            = sarama.NewConfig()
+	retryWaitDuration = 5 * time.Second
 )
 
 func main() {
@@ -108,12 +109,13 @@ func main() {
 	}
 	go func() {
 		for {
-			err := consumerGroup.Consume(ctx, strings.Split(topics, ","), &consumerGroupHandler)
-			if err != nil {
-				log.Panicf("Error from consumerGroupHandler: %v", err)
-			}
 			if ctx.Err() != nil {
 				return
+			}
+			err := consumerGroup.Consume(ctx, strings.Split(topics, ","), &consumerGroupHandler)
+			if err != nil {
+				log.Printf("Error: %v. Retrying in %v...", err, retryWaitDuration)
+				time.Sleep(retryWaitDuration)
 			}
 			consumerGroupHandler.ready = make(chan bool)
 		}
