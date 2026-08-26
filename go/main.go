@@ -8,11 +8,12 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"sarama_demo_dts/avro"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/aliyun/aliyun-dts-subscribe-demo/go/avro"
 
 	"github.com/IBM/sarama"
 	"github.com/linkedin/goavro/v2"

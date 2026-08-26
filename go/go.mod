@@ -1,4 +1,4 @@
-module sarama_demo_dts
+module github.com/aliyun/aliyun-dts-subscribe-demo/go
 
 go 1.18
 
